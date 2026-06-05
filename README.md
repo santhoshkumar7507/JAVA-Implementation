@@ -2,7 +2,7 @@
 
 # 🎓 Student Management System
 
-<img src="assets/hero_image.png" alt="Student Management Hero" width="800">
+<img src="assets/hero_image_v2.png" alt="Student Management Hero" width="800">
 
 [![Java Support](https://img.shields.io/badge/Java-8%2B-ED8B00?style=for-the-badge&logo=java&logoColor=white)](https://www.java.com/)
 [![CLI Based](https://img.shields.io/badge/Interface-CLI-2ea44f?style=for-the-badge&logo=gnu-bash&logoColor=white)](#)
