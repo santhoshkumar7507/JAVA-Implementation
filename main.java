@@ -14,7 +14,10 @@ class Colors {
     public static final String PURPLE = "\033[0;35m";
     public static final String CYAN = "\033[0;36m";
     public static final String WHITE = "\033[0;37m";
+    
+    public static final String BG_BLUE = "\033[44m";
     public static final String BOLD = "\033[1m";
+    public static final String CLEAR_SCREEN = "\033[H\033[2J";
 }
 
 class Student implements Serializable {
@@ -57,43 +60,63 @@ class StudentManager {
 
     public void addStudent(Student student) {
         if(getStudentById(student.getId()) != null) {
-             System.out.println(Colors.RED + "Error: Student with ID " + student.getId() + " already exists." + Colors.RESET);
+             System.out.println(Colors.RED + " [!] Error: Student with ID " + student.getId() + " already exists." + Colors.RESET);
              return;
         }
         students.add(student);
         saveStudents();
-        System.out.println(Colors.GREEN + "Student added successfully!" + Colors.RESET);
+        System.out.println(Colors.GREEN + " [✓] Student added successfully!" + Colors.RESET);
     }
 
     public void viewAllStudents() {
         if (students.isEmpty()) {
-            System.out.println(Colors.YELLOW + "No students found in the system." + Colors.RESET);
+            System.out.println(Colors.YELLOW + " [!] No students found in the system." + Colors.RESET);
             return;
         }
-        
-        System.out.println(Colors.CYAN + "--------------------------------------------------------------------------------");
-        System.out.printf("| %-10s | %-20s | %-5s | %-20s | %-5s |\n", "ID", "Name", "Age", "Course", "Grade");
-        System.out.println("--------------------------------------------------------------------------------" + Colors.RESET);
-        
+        printStudentTable(students);
+    }
+
+    public void searchStudent(String keyword) {
+        List<Student> results = new ArrayList<>();
         for (Student s : students) {
-            System.out.printf(Colors.WHITE + "| %-10s | %-20s | %-5d | %-20s | %-5s |\n" + Colors.RESET,
+            if (s.getName().toLowerCase().contains(keyword.toLowerCase()) || 
+                s.getId().toLowerCase().contains(keyword.toLowerCase())) {
+                results.add(s);
+            }
+        }
+        
+        if (results.isEmpty()) {
+            System.out.println(Colors.YELLOW + " [!] No students found matching: " + keyword + Colors.RESET);
+        } else {
+            System.out.println(Colors.GREEN + " [✓] Found " + results.size() + " matching student(s):" + Colors.RESET);
+            printStudentTable(results);
+        }
+    }
+
+    private void printStudentTable(List<Student> list) {
+        System.out.println(Colors.CYAN + "╔════════════╦════════════════════════╦═══════╦══════════════════════╦═══════╗");
+        System.out.printf("║ %-10s ║ %-22s ║ %-5s ║ %-20s ║ %-5s ║\n", "ID", "Name", "Age", "Course", "Grade");
+        System.out.println("╠════════════╬════════════════════════╬═══════╬══════════════════════╬═══════╣" + Colors.RESET);
+        
+        for (Student s : list) {
+            System.out.printf(Colors.CYAN + "║ " + Colors.WHITE + "%-10s" + Colors.CYAN + " ║ " + Colors.WHITE + "%-22s" + Colors.CYAN + " ║ " + Colors.WHITE + "%-5d" + Colors.CYAN + " ║ " + Colors.WHITE + "%-20s" + Colors.CYAN + " ║ " + Colors.WHITE + "%-5s" + Colors.CYAN + " ║\n" + Colors.RESET,
                     s.getId(), s.getName(), s.getAge(), s.getCourse(), s.getGrade());
         }
-        System.out.println(Colors.CYAN + "--------------------------------------------------------------------------------" + Colors.RESET);
+        System.out.println(Colors.CYAN + "╚════════════╩════════════════════════╩═══════╩══════════════════════╩═══════╝" + Colors.RESET);
     }
 
     public void updateStudent(String id, Scanner scanner) {
         Student s = getStudentById(id);
         if (s == null) {
-            System.out.println(Colors.RED + "Error: Student not found." + Colors.RESET);
+            System.out.println(Colors.RED + " [!] Error: Student not found." + Colors.RESET);
             return;
         }
 
-        System.out.print("Enter New Name (leave blank to keep '" + s.getName() + "'): ");
+        System.out.print(Colors.CYAN + " Enter New Name (leave blank to keep '" + s.getName() + "'): " + Colors.RESET);
         String name = scanner.nextLine();
         if (!name.trim().isEmpty()) s.setName(name);
 
-        System.out.print("Enter New Age (leave blank to keep '" + s.getAge() + "'): ");
+        System.out.print(Colors.CYAN + " Enter New Age (leave blank to keep '" + s.getAge() + "'): " + Colors.RESET);
         String ageStr = scanner.nextLine();
         if (!ageStr.trim().isEmpty()) {
             try {
@@ -101,23 +124,23 @@ class StudentManager {
                 if (newAge >= 0) {
                     s.setAge(newAge);
                 } else {
-                     System.out.println(Colors.RED + "Invalid age. Keeping old age." + Colors.RESET);
+                     System.out.println(Colors.RED + " [!] Invalid age. Keeping old age." + Colors.RESET);
                 }
             } catch (NumberFormatException e) {
-                System.out.println(Colors.RED + "Invalid age format. Keeping old age." + Colors.RESET);
+                System.out.println(Colors.RED + " [!] Invalid age format. Keeping old age." + Colors.RESET);
             }
         }
 
-        System.out.print("Enter New Course (leave blank to keep '" + s.getCourse() + "'): ");
+        System.out.print(Colors.CYAN + " Enter New Course (leave blank to keep '" + s.getCourse() + "'): " + Colors.RESET);
         String course = scanner.nextLine();
         if (!course.trim().isEmpty()) s.setCourse(course);
 
-        System.out.print("Enter New Grade (leave blank to keep '" + s.getGrade() + "'): ");
+        System.out.print(Colors.CYAN + " Enter New Grade (leave blank to keep '" + s.getGrade() + "'): " + Colors.RESET);
         String grade = scanner.nextLine();
         if (!grade.trim().isEmpty()) s.setGrade(grade);
 
         saveStudents();
-        System.out.println(Colors.GREEN + "Student updated successfully!" + Colors.RESET);
+        System.out.println(Colors.GREEN + " [✓] Student updated successfully!" + Colors.RESET);
     }
 
     public void deleteStudent(String id) {
@@ -125,10 +148,24 @@ class StudentManager {
         if (s != null) {
             students.remove(s);
             saveStudents();
-            System.out.println(Colors.GREEN + "Student deleted successfully!" + Colors.RESET);
+            System.out.println(Colors.GREEN + " [✓] Student deleted successfully!" + Colors.RESET);
         } else {
-            System.out.println(Colors.RED + "Error: Student not found." + Colors.RESET);
+            System.out.println(Colors.RED + " [!] Error: Student not found." + Colors.RESET);
         }
+    }
+
+    public void showStatistics() {
+        if (students.isEmpty()) {
+            System.out.println(Colors.YELLOW + " [!] No students available for statistics." + Colors.RESET);
+            return;
+        }
+        double avgAge = students.stream().mapToInt(Student::getAge).average().orElse(0.0);
+        System.out.println(Colors.PURPLE + "╔════════════════════════════════════════════════╗");
+        System.out.println("║                SYSTEM STATISTICS               ║");
+        System.out.println("╠════════════════════════════════════════════════╣");
+        System.out.printf("║ Total Enrolled Students : %-20d ║\n", students.size());
+        System.out.printf("║ Average Student Age     : %-20.1f ║\n", avgAge);
+        System.out.println("╚════════════════════════════════════════════════╝" + Colors.RESET);
     }
 
     private Student getStudentById(String id) {
@@ -147,7 +184,7 @@ class StudentManager {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                 students = (List<Student>) ois.readObject();
             } catch (Exception e) {
-                System.out.println(Colors.RED + "Error loading student data." + Colors.RESET);
+                System.out.println(Colors.RED + " [!] Error loading student data." + Colors.RESET);
             }
         }
     }
@@ -156,24 +193,39 @@ class StudentManager {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             oos.writeObject(students);
         } catch (IOException e) {
-            System.out.println(Colors.RED + "Error saving student data." + Colors.RESET);
+            System.out.println(Colors.RED + " [!] Error saving student data." + Colors.RESET);
         }
     }
 }
 
 public class main {
+    private static void clearScreen() {
+        System.out.print(Colors.CLEAR_SCREEN);
+        System.out.flush();
+    }
+
     private static void printHeader() {
-        System.out.println(Colors.BLUE + Colors.BOLD + "\n" +
-                "  ____  _             _             _      __  __                                              _   \n" +
-                " / ___|| |_ _   _  __| | ___ _ __ | |_   |  \\/  | __ _ _ __   __ _  __ _  ___ _ __ ___   ___| |_ \n" +
-                " \\___ \\| __| | | |/ _` |/ _ \\ '_ \\| __|  | |\\/| |/ _` | '_ \\ / _` |/ _` |/ _ \\ '_ ` _ \\ / _ \\ __|\n" +
-                "  ___) | |_| |_| | (_| |  __/ | | | |_   | |  | | (_| | | | | (_| | (_| |  __/ | | | | |  __/ |_ \n" +
-                " |____/ \\__|\\__,_|\\__,_|\\___|_| |_|\\__|  |_|  |_|\\__,_|_| |_|\\__,_|\\__, |\\___|_| |_| |_|\\___|\\__|\n" +
-                "                                                                   |___/                         \n" +
-                Colors.RESET);
-        System.out.println(Colors.CYAN + "=================================================================================================" + Colors.RESET);
-        System.out.println(Colors.PURPLE + "                         Welcome to the Student Management System                                " + Colors.RESET);
-        System.out.println(Colors.CYAN + "=================================================================================================" + Colors.RESET);
+        System.out.println(Colors.BLUE + Colors.BOLD + 
+                "   _____ _             _             _   \n" +
+                "  / ____| |           | |           | |  \n" +
+                " | (___ | |_ _   _  __| | ___ _ __ | |_ \n" +
+                "  \\___ \\| __| | | |/ _` |/ _ \\ '_ \\| __|\n" +
+                "  ____) | |_| |_| | (_| |  __/ | | | |_ \n" +
+                " |_____/ \\__|\\__,_|\\__,_|\\___|_| |_|\\__|\n" +
+                "                                        \n" + Colors.RESET);
+        
+        System.out.println(Colors.CYAN + " ╔═════════════════════════════════════════════════════════╗");
+        System.out.println(" ║" + Colors.PURPLE + Colors.BOLD + "            ADVANCED STUDENT MANAGEMENT SYSTEM           " + Colors.CYAN + "║");
+        System.out.println(" ╚═════════════════════════════════════════════════════════╝" + Colors.RESET);
+    }
+
+    private static void simulateLoading() {
+        System.out.print(Colors.YELLOW + " Processing ");
+        for (int i = 0; i < 3; i++) {
+            try { Thread.sleep(200); } catch (InterruptedException e) {}
+            System.out.print(".");
+        }
+        System.out.println(Colors.RESET);
     }
 
     public static void main(String[] args) {
@@ -182,78 +234,106 @@ public class main {
         boolean running = true;
 
         while (running) {
+            clearScreen();
             printHeader();
-            System.out.println(Colors.YELLOW + " 1. " + Colors.WHITE + "Add Student");
-            System.out.println(Colors.YELLOW + " 2. " + Colors.WHITE + "View All Students");
-            System.out.println(Colors.YELLOW + " 3. " + Colors.WHITE + "Update Student");
-            System.out.println(Colors.YELLOW + " 4. " + Colors.WHITE + "Delete Student");
-            System.out.println(Colors.YELLOW + " 5. " + Colors.WHITE + "Exit");
-            System.out.println(Colors.CYAN + "=================================================================================================" + Colors.RESET);
-            System.out.print(Colors.GREEN + " Enter your choice: " + Colors.RESET);
+            System.out.println(Colors.YELLOW + "  [1] " + Colors.WHITE + "Enroll New Student");
+            System.out.println(Colors.YELLOW + "  [2] " + Colors.WHITE + "View All Students " + Colors.GREEN + "(Table View)");
+            System.out.println(Colors.YELLOW + "  [3] " + Colors.WHITE + "Search Student " + Colors.CYAN + "(By ID/Name)");
+            System.out.println(Colors.YELLOW + "  [4] " + Colors.WHITE + "Update Student Record");
+            System.out.println(Colors.YELLOW + "  [5] " + Colors.WHITE + "Delete Student");
+            System.out.println(Colors.YELLOW + "  [6] " + Colors.WHITE + "View System Statistics");
+            System.out.println(Colors.YELLOW + "  [0] " + Colors.WHITE + "Exit Application");
+            System.out.println(Colors.CYAN + " ───────────────────────────────────────────────────────────" + Colors.RESET);
+            System.out.print(Colors.GREEN + "  ➤ Select an option: " + Colors.RESET);
 
             String choice = scanner.nextLine();
 
             switch (choice.trim()) {
                 case "1":
-                    System.out.println(Colors.CYAN + "\n--- Add New Student ---" + Colors.RESET);
-                    System.out.print("Enter ID: ");
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ ENROLL NEW STUDENT ] " + Colors.RESET + "\n");
+                    System.out.print(Colors.CYAN + " Enter ID: " + Colors.RESET);
                     String id = scanner.nextLine();
-                    
                     if (id.trim().isEmpty()) {
-                        System.out.println(Colors.RED + "ID cannot be empty." + Colors.RESET);
+                        System.out.println(Colors.RED + " [!] ID cannot be empty." + Colors.RESET);
                         waitForEnter(scanner);
                         break;
                     }
 
-                    System.out.print("Enter Name: ");
+                    System.out.print(Colors.CYAN + " Enter Name: " + Colors.RESET);
                     String name = scanner.nextLine();
                     
                     int age = -1;
                     while(age < 0) {
-                        System.out.print("Enter Age: ");
+                        System.out.print(Colors.CYAN + " Enter Age: " + Colors.RESET);
                         try {
                             age = Integer.parseInt(scanner.nextLine());
                             if(age < 0) {
-                                System.out.println(Colors.RED + "Age cannot be negative." + Colors.RESET);
+                                System.out.println(Colors.RED + " [!] Age cannot be negative." + Colors.RESET);
                             }
                         } catch (NumberFormatException e) {
-                            System.out.println(Colors.RED + "Please enter a valid number for age." + Colors.RESET);
+                            System.out.println(Colors.RED + " [!] Please enter a valid number for age." + Colors.RESET);
                         }
                     }
 
-                    System.out.print("Enter Course: ");
+                    System.out.print(Colors.CYAN + " Enter Course: " + Colors.RESET);
                     String course = scanner.nextLine();
-                    System.out.print("Enter Grade: ");
+                    System.out.print(Colors.CYAN + " Enter Grade: " + Colors.RESET);
                     String grade = scanner.nextLine();
 
+                    simulateLoading();
                     manager.addStudent(new Student(id, name, age, course, grade));
                     waitForEnter(scanner);
                     break;
                 case "2":
-                    System.out.println(Colors.CYAN + "\n--- All Students ---" + Colors.RESET);
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ ALL ENROLLED STUDENTS ] " + Colors.RESET + "\n");
+                    simulateLoading();
                     manager.viewAllStudents();
                     waitForEnter(scanner);
                     break;
                 case "3":
-                    System.out.println(Colors.CYAN + "\n--- Update Student ---" + Colors.RESET);
-                    System.out.print("Enter the ID of the student to update: ");
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ SEARCH DATABASE ] " + Colors.RESET + "\n");
+                    System.out.print(Colors.CYAN + " Enter Name or ID to search: " + Colors.RESET);
+                    String keyword = scanner.nextLine();
+                    simulateLoading();
+                    manager.searchStudent(keyword);
+                    waitForEnter(scanner);
+                    break;
+                case "4":
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ UPDATE STUDENT RECORD ] " + Colors.RESET + "\n");
+                    System.out.print(Colors.CYAN + " Enter the ID of the student to update: " + Colors.RESET);
                     String updateId = scanner.nextLine();
                     manager.updateStudent(updateId, scanner);
                     waitForEnter(scanner);
                     break;
-                case "4":
-                    System.out.println(Colors.CYAN + "\n--- Delete Student ---" + Colors.RESET);
-                    System.out.print("Enter the ID of the student to delete: ");
+                case "5":
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ DELETE STUDENT RECORD ] " + Colors.RESET + "\n");
+                    System.out.print(Colors.CYAN + " Enter the ID of the student to delete: " + Colors.RESET);
                     String deleteId = scanner.nextLine();
+                    simulateLoading();
                     manager.deleteStudent(deleteId);
                     waitForEnter(scanner);
                     break;
-                case "5":
-                    System.out.println(Colors.PURPLE + "\nThank you for using the Student Management System. Goodbye!" + Colors.RESET);
+                case "6":
+                    clearScreen();
+                    System.out.println(Colors.BG_BLUE + Colors.WHITE + " [ SYSTEM STATISTICS ] " + Colors.RESET + "\n");
+                    simulateLoading();
+                    manager.showStatistics();
+                    waitForEnter(scanner);
+                    break;
+                case "0":
+                    clearScreen();
+                    System.out.println(Colors.PURPLE + "\n  Saving database..." + Colors.RESET);
+                    simulateLoading();
+                    System.out.println(Colors.GREEN + "  Goodbye! Have a great day.\n" + Colors.RESET);
                     running = false;
                     break;
                 default:
-                    System.out.println(Colors.RED + "Invalid choice. Please try again." + Colors.RESET);
+                    System.out.println(Colors.RED + " [!] Invalid choice. Please try again." + Colors.RESET);
                     waitForEnter(scanner);
             }
         }
@@ -261,7 +341,7 @@ public class main {
     }
 
     private static void waitForEnter(Scanner scanner) {
-        System.out.print(Colors.YELLOW + "\nPress Enter to continue..." + Colors.RESET);
+        System.out.print(Colors.PURPLE + "\n ➤ Press Enter to return to the main menu..." + Colors.RESET);
         scanner.nextLine();
     }
 }
